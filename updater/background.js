@@ -129,20 +129,19 @@
    */
   async function check(force) {
     const state = await getState();
-
-    // manifest 版本跟上次检查时不一样 → 说明扩展刚被更新过，必须重新核对，
-    // 不能因为「24 小时内查过了」就沿用旧结论。
     const versionChanged = state.checkedVersion !== state.current;
 
     if (!force && !versionChanged && state.lastCheck && Date.now() - state.lastCheck < CHECK_INTERVAL_MS) {
+      syncBadge(state);
       return state;
     }
 
     await setState({ checking: true });
+    let next;
     try {
       const meta = await fetchVersionMeta();
       const hasUpdate = compareVersion(meta.version, currentVersion()) > 0;
-      return await setState({
+      next = await setState({
         checkedVersion: currentVersion(),
         latest: meta.version,
         hasUpdate,
@@ -157,14 +156,15 @@
         checking: false
       });
     } catch (e) {
-      // 失败静默：保留上一次的结论，只记录错误原因，避免误报"有更新"
-      return await setState({
+      next = await setState({
         checkedVersion: currentVersion(),
         checking: false,
         lastCheck: Date.now(),
         lastError: String((e && e.message) || e)
       });
     }
+    syncBadge(next);
+    return next;
   }
 
   function ensureAlarm() {
@@ -179,13 +179,15 @@
     if (alarm.name === ALARM_NAME) check(false);
   });
 
-  chrome.runtime.onInstalled.addListener(() => {
+  chrome.runtime.onInstalled.addListener(async () => {
     ensureAlarm();
+    syncBadge(await getState());   // 重载后先把角标恢复成当前状态
     check(false);
   });
 
-  chrome.runtime.onStartup.addListener(() => {
+  chrome.runtime.onStartup.addListener(async () => {
     ensureAlarm();
+    syncBadge(await getState());
     check(false);
   });
 
@@ -193,7 +195,10 @@
     if (!msg || typeof msg.type !== 'string') return;
 
     if (msg.type === 'updater:status') {
-      getState().then((s) => sendResponse({ ok: true, state: s }));
+      getState().then((s) => {
+        syncBadge(s);
+        sendResponse({ ok: true, state: s });
+      });
       return true;
     }
 
