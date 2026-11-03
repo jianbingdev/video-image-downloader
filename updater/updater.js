@@ -442,4 +442,20 @@ $('btnRetry').addEventListener('click', async () => {
 
 $('btnClose').addEventListener('click', () => window.close());
 
+/* 忘记已记住的文件夹：清掉 IndexedDB 里的句柄后重载页面，
+ * 下次就会重新走"选择扩展文件夹"的首次流程。换目录或重演首测时用。 */
+$('forgetDir').addEventListener('click', async (e) => {
+  e.preventDefault();
+  try {
+    const db = await idbOpen();
+    await new Promise((resolve) => {
+      const tx = db.transaction(DB_STORE, 'readwrite');
+      tx.objectStore(DB_STORE).delete(DB_DIR_KEY);
+      tx.oncomplete = () => { db.close(); resolve(); };
+      tx.onerror = () => { db.close(); resolve(); };
+    });
+  } catch (_) {}
+  location.reload();
+});
+
 start().catch((e) => showError(String((e && e.message) || e)));
