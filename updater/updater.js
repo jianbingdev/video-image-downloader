@@ -408,8 +408,7 @@ async function start() {
     showPickButton('选择扩展文件夹并继续');
     $('hint').textContent = '';
     $('tip').hidden = false;
-    $('tip').innerHTML = '<b>要选哪个文件夹？</b>就是你加载扩展时选的那个目录，' +
-      '打开它应该能直接看到 manifest.json 文件。选错的话下面会提示，不会写坏东西。';
+    $('tip').innerHTML = '<b>要选哪个文件夹？</b>就是你加载此扩展时选的那个目录。选错会提示，不会误写。';
   }
 }
 
