@@ -265,6 +265,7 @@ async function runUpdate(dir, meta) {
   if (state.running) return;
   state.running = true;
   hideError();
+  $('tip').hidden = true;
 
   if (!(await looksLikeExtensionDir(dir))) {
     state.running = false;
@@ -405,7 +406,10 @@ async function start() {
   } else {
     setProgress(0, '第一次更新需要指定扩展文件夹，只需一次', false);
     showPickButton('选择扩展文件夹并继续');
-    $('hint').textContent = '请选中你加载扩展时用的那个文件夹（里面有 manifest.json 的那一层）。';
+    $('hint').textContent = '';
+    $('tip').hidden = false;
+    $('tip').innerHTML = '<b>要选哪个文件夹？</b>就是你加载扩展时选的那个目录，' +
+      '打开它应该能直接看到 manifest.json 文件。选错的话下面会提示，不会写坏东西。';
   }
 }
 
