@@ -446,6 +446,7 @@ $('btnClose').addEventListener('click', () => window.close());
  * 下次就会重新走"选择扩展文件夹"的首次流程。换目录或重演首测时用。 */
 $('forgetDir').addEventListener('click', async (e) => {
   e.preventDefault();
+  if (state.running && !window.confirm('更新正在进行，重置会中断它（已下载的部分会丢弃）。继续吗？')) return;
   try {
     const db = await idbOpen();
     await new Promise((resolve) => {
