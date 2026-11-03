@@ -12,8 +12,9 @@
 (function () {
   'use strict';
 
-  // dev 分支读 @dev，合并回 main 发版时这一行要改成 @main
-  const SOURCE = 'https://cdn.jsdelivr.net/gh/jianbingdev/video-image-downloader@dev/version.json';
+  const REPO = 'jianbingdev/video-image-downloader';
+  // dev 分支读 dev；合并回 main 正式发版时改成 'main'
+  const REF = 'dev';
   const STATE_KEY = 'updater';
   const CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000;
   const FETCH_TIMEOUT_MS = 8000;
@@ -39,11 +40,6 @@
       if (x < y) return -1;
     }
     return 0;
-  }
-
-  function dateKey() {
-    const d = new Date();
-    return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
   }
 
   /**
@@ -76,22 +72,56 @@
     return merged;
   }
 
-  async function fetchVersionMeta() {
+  async function fetchWithTimeout(url, options) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
     try {
-      // 日期参数用来绕开 jsDelivr 的 12 小时分支缓存，同一天内仍然命中缓存
-      const res = await fetch(`${SOURCE}?d=${dateKey()}`, {
-        cache: 'no-store',
-        signal: controller.signal
-      });
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const json = await res.json();
-      if (!json || !json.version) throw new Error('version.json 缺少 version 字段');
-      return json;
+      return await fetch(url, Object.assign({ cache: 'no-store' }, options, { signal: controller.signal }));
     } finally {
       clearTimeout(timer);
     }
+  }
+
+  /**
+   * 主源：GitHub API。内容有约 60 秒缓存，基本实时。
+   * 匿名限流 60 次/小时，我们一天查一两次，够用。
+   */
+  async function fetchViaApi() {
+    const res = await fetchWithTimeout(
+      `https://api.github.com/repos/${REPO}/contents/version.json?ref=${REF}`,
+      { headers: { 'Accept': 'application/vnd.github.raw' } }
+    );
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const json = JSON.parse(await res.text());
+    if (!json || !json.version) throw new Error('响应缺少 version 字段');
+    return json;
+  }
+
+  /**
+   * 备源：jsDelivr。比 API 稳，但**分支内容会缓存 12 小时**，
+   * 发版后最多延迟半天才看到新版本。所以只做兜底，不当主源。
+   */
+  async function fetchViaCdn() {
+    const res = await fetchWithTimeout(`https://cdn.jsdelivr.net/gh/${REPO}@${REF}/version.json`);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const json = await res.json();
+    if (!json || !json.version) throw new Error('响应缺少 version 字段');
+    return json;
+  }
+
+  async function fetchVersionMeta() {
+    const errors = [];
+    try {
+      return await fetchViaApi();
+    } catch (e) {
+      errors.push('API ' + ((e && e.message) || e));
+    }
+    try {
+      return await fetchViaCdn();
+    } catch (e) {
+      errors.push('CDN ' + ((e && e.message) || e));
+    }
+    throw new Error(errors.join(' ｜ '));
   }
 
   /**
