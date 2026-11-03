@@ -217,6 +217,20 @@
       sendResponse({ ok: true });
       return false;
     }
+
+    if (msg.type === 'updater:finish') {
+      // 更新完成：先关掉那个独立小窗口，再重载扩展。
+      // 顺序不能反 —— reload 会销毁 service worker 的上下文，后面的代码就不执行了。
+      const reload = () => { try { chrome.runtime.reload(); } catch (_) {} };
+      const wid = msg.windowId;
+      if (typeof wid === 'number') {
+        chrome.windows.remove(wid).then(reload, reload);
+      } else {
+        reload();
+      }
+      sendResponse({ ok: true });
+      return false;
+    }
   });
 
   // service worker 冷启动时也把闹钟补上（浏览器重启后 alarms 会保留，这里只是兜底）

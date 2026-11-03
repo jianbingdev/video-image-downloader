@@ -352,8 +352,19 @@ async function runUpdate(dir, meta) {
     report({ phase: 'reloading', percent: 100, message: '正在重载…', removed: removed.length });
 
     state.running = false;
-    setTimeout(() => {
-      chrome.runtime.reload();
+    setTimeout(async () => {
+      // 小窗口是 chrome.windows 创建的，属于浏览器层：扩展 reload 掉了它也不会自己关。
+      // 所以交给后台先 remove 窗口、再 reload（顺序不能反，reload 会销毁当前上下文）。
+      let winId = null;
+      try {
+        const w = await chrome.windows.getCurrent();
+        winId = w && w.id;
+      } catch (_) {}
+      try {
+        chrome.runtime.sendMessage({ type: 'updater:finish', windowId: winId });
+      } catch (_) {
+        chrome.runtime.reload();
+      }
     }, 800);
   } catch (e) {
     state.running = false;
