@@ -373,6 +373,18 @@ async function start() {
   state.meta = st.meta;
   state.currentVersion = st.current || state.currentVersion;
 
+  // 已经是最新：不能显示"正在更新"，更不能让用户再点一次
+  if (!st.hasUpdate) {
+    $('title').textContent = '已是最新版本';
+    $('subtitle').textContent = `当前 ${state.currentVersion}`;
+    $('steps').hidden = true;
+    $('bar').hidden = true;
+    $('status').textContent = '没有可用的更新';
+    $('hint').textContent = '';
+    $('btnClose').hidden = false;
+    return;
+  }
+
   if (!state.meta || !state.meta.version) {
     $('title').textContent = '没有可用的版本信息';
     $('subtitle').textContent = `当前版本 ${state.currentVersion}`;

@@ -46,23 +46,34 @@
     return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
   }
 
+  /**
+   * 读状态。注意 current 和 hasUpdate **永远是实时算的**，不信任存档里的值：
+   * 扩展更新完 manifest 版本会变，而 storage 里那份是检查时的快照。
+   * 不实时重算，就会出现「已经是 1.0.10 了还提示有新版本」。
+   */
   async function getState() {
     const got = await chrome.storage.local.get(STATE_KEY);
-    return got[STATE_KEY] || {
-      current: currentVersion(),
-      latest: '',
-      hasUpdate: false,
-      meta: null,
-      lastCheck: 0,
-      lastError: '',
-      checking: false
+    const raw = got[STATE_KEY] || {};
+    const cur = currentVersion();
+    const latest = raw.latest || '';
+    return {
+      current: cur,
+      checkedVersion: raw.checkedVersion || '',   // 上次检查时扩展的版本
+      latest,
+      hasUpdate: latest ? compareVersion(latest, cur) > 0 : false,
+      meta: raw.meta || null,
+      lastCheck: raw.lastCheck || 0,
+      lastError: raw.lastError || '',
+      checking: !!raw.checking
     };
   }
 
   async function setState(patch) {
-    const next = Object.assign(await getState(), patch, { current: currentVersion() });
-    await chrome.storage.local.set({ [STATE_KEY]: next });
-    return next;
+    const merged = Object.assign(await getState(), patch);
+    merged.current = currentVersion();
+    merged.hasUpdate = merged.latest ? compareVersion(merged.latest, merged.current) > 0 : false;
+    await chrome.storage.local.set({ [STATE_KEY]: merged });
+    return merged;
   }
 
   async function fetchVersionMeta() {
@@ -88,7 +99,12 @@
    */
   async function check(force) {
     const state = await getState();
-    if (!force && state.lastCheck && Date.now() - state.lastCheck < CHECK_INTERVAL_MS) {
+
+    // manifest 版本跟上次检查时不一样 → 说明扩展刚被更新过，必须重新核对，
+    // 不能因为「24 小时内查过了」就沿用旧结论。
+    const versionChanged = state.checkedVersion !== state.current;
+
+    if (!force && !versionChanged && state.lastCheck && Date.now() - state.lastCheck < CHECK_INTERVAL_MS) {
       return state;
     }
 
@@ -97,6 +113,7 @@
       const meta = await fetchVersionMeta();
       const hasUpdate = compareVersion(meta.version, currentVersion()) > 0;
       return await setState({
+        checkedVersion: currentVersion(),
         latest: meta.version,
         hasUpdate,
         meta: {
@@ -112,6 +129,7 @@
     } catch (e) {
       // 失败静默：保留上一次的结论，只记录错误原因，避免误报"有更新"
       return await setState({
+        checkedVersion: currentVersion(),
         checking: false,
         lastCheck: Date.now(),
         lastError: String((e && e.message) || e)
