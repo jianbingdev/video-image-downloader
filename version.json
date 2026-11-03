@@ -1,6 +1,6 @@
 {
-  "version": "1.0.12",
-  "notes": "弹窗底部加「检查更新」按钮",
+  "version": "1.10",
+  "notes": "主页卡片级下载按钮；修复小卡片下载串视频",
   "zipball": "https://codeload.github.com/jianbingdev/video-image-downloader/zip/refs/heads/dev",
   "page": "https://github.com/jianbingdev/video-image-downloader/compare/v1.0.9...dev"
 }
