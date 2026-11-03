@@ -227,6 +227,29 @@
   .update .progress i { display: block; height: 100%; width: 0; background: #2563eb; transition: width .18s ease; }
   .update .sub { margin-top: 5px; font-size: 11.5px; color: #3b82f6; }
   .update .sub[hidden] { display: none; }
+
+  /* ---------- 版本行 ---------- */
+  .verline {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 14px;
+    font-size: 11.5px;
+    color: #9ca3af;
+  }
+  .verline .sep { color: #d1d5db; }
+  .verline button {
+    padding: 0;
+    border: none;
+    background: none;
+    font: inherit;
+    font-size: 11.5px;
+    color: #2563eb;
+    cursor: pointer;
+  }
+  .verline button:hover:not(:disabled) { text-decoration: underline; }
+  .verline button:disabled { color: #9ca3af; cursor: default; }
 </style>
 </head>
 <body>
@@ -282,6 +305,12 @@
 
   <div class="hint" id="hint"></div>
   <div class="hint"><b>下载视频：</b>在抖音视频页把鼠标移到视频上，右上角就会浮出下载按钮。</div>
+
+  <div class="verline">
+    <span id="verText">v1.0.11</span>
+    <span class="sep">·</span>
+    <button id="checkBtn" type="button">检查更新</button>
+  </div>
 
   <script src="popup.js"></script>
 </body>

@@ -295,6 +295,50 @@ try {
   });
 } catch (_) {}
 
+/* ---------- 手动检查更新 ---------- */
+
+const verText = document.getElementById('verText');
+const checkBtn = document.getElementById('checkBtn');
+
+if (verText) verText.textContent = 'v' + chrome.runtime.getManifest().version;
+
+function resetCheckBtn(label) {
+  checkBtn.textContent = label;
+  setTimeout(() => {
+    checkBtn.textContent = '检查更新';
+    checkBtn.disabled = false;
+    checkBtn.title = '';
+  }, 2200);
+}
+
+if (checkBtn) {
+  checkBtn.addEventListener('click', async () => {
+    if (checkBtn.disabled) return;
+    checkBtn.disabled = true;
+    checkBtn.textContent = '检查中…';
+
+    const res = await sendUpdate({ type: 'updater:check' });
+
+    if (!res || !res.ok) {
+      checkBtn.title = (res && res.error) || '请求失败';
+      resetCheckBtn('检查失败');
+      return;
+    }
+
+    renderUpdate(res.state);
+    const s = res.state || {};
+    if (s.hasUpdate) {
+      const v = (s.meta && s.meta.version) || '新版本';
+      resetCheckBtn('发现 ' + v);
+    } else if (s.lastError) {
+      checkBtn.title = s.lastError;   // 悬停能看到真实原因，不占版面
+      resetCheckBtn('检查失败');
+    } else {
+      resetCheckBtn('已是最新');
+    }
+  });
+}
+
 /* ==================== 启动 ==================== */
 
 (async () => {
