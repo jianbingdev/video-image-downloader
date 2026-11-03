@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    width: 268px;
+    padding: 16px;
+    font: 14px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+    color: #1f2937;
+    background: #fff;
+  }
+
+  /* ---------- 标题栏 ---------- */
+  h1 {
+    margin: 0 0 4px;
+    font-size: 15px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  h1 svg.logo { flex: none; }
+  h1 .spacer { flex: 1; }
+
+  .gear {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border: none;
+    border-radius: 7px;
+    background: transparent;
+    color: #9ca3af;
+    cursor: pointer;
+    transition: background .12s ease, color .12s ease;
+  }
+  .gear:hover { background: #f3f4f6; color: #4b5563; }
+  .gear[aria-expanded="true"] { background: #eff6ff; color: #2563eb; }
+
+  /* ---------- 内容 ---------- */
+  .status {
+    margin: 10px 0 14px;
+    padding: 9px 11px;
+    border-radius: 8px;
+    background: #f3f4f6;
+    color: #4b5563;
+    font-size: 13px;
+  }
+  .status.ready { background: #eff6ff; color: #1d4ed8; }
+  .status.warn { background: #fef3c7; color: #92400e; }
+
+  .primary {
+    width: 100%;
+    padding: 10px 12px;
+    border: none;
+    border-radius: 8px;
+    background: #2563eb;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background .12s ease;
+  }
+  .primary:hover:not(:disabled) { background: #1d4ed8; }
+  .primary:disabled { background: #d1d5db; color: #6b7280; cursor: default; }
+
+  /* ---------- 设置面板 ---------- */
+  .panel { display: none; margin-top: 13px; }
+  .panel.open { display: block; }
+
+  .panel h2 {
+    margin: 0 0 8px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #9ca3af;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 5px;
+  }
+  .pos {
+    position: relative;
+    height: 32px;
+    padding: 0;
+    border: 1px solid #e5e7eb;
+    border-radius: 7px;
+    background: #fff;
+    cursor: pointer;
+    transition: border-color .12s ease, background .12s ease;
+  }
+  .pos i {
+    position: absolute;
+    width: 7px;
+    height: 7px;
+    border-radius: 2px;
+    background: #cbd5e1;
+    transition: background .12s ease;
+  }
+  .pos:hover { border-color: #bfdbfe; background: #f8fbff; }
+  .pos[aria-pressed="true"] { border-color: #2563eb; background: #eff6ff; }
+  .pos[aria-pressed="true"] i { background: #2563eb; }
+
+  .pos[data-a="tl"] i { left: 5px;  top: 5px; }
+  .pos[data-a="tc"] i { left: 50%;  top: 5px;    margin-left: -3.5px; }
+  .pos[data-a="tr"] i { right: 5px; top: 5px; }
+  .pos[data-a="ml"] i { left: 5px;  top: 50%;    margin-top: -3.5px; }
+  .pos[data-a="mc"] i { left: 50%;  top: 50%;    margin-left: -3.5px; margin-top: -3.5px; }
+  .pos[data-a="mr"] i { right: 5px; top: 50%;    margin-top: -3.5px; }
+  .pos[data-a="bl"] i { left: 5px;  bottom: 5px; }
+  .pos[data-a="bc"] i { left: 50%;  bottom: 5px; margin-left: -3.5px; }
+  .pos[data-a="br"] i { right: 5px; bottom: 5px; }
+
+  .line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 10px;
+    font-size: 13px;
+    color: #4b5563;
+  }
+  .line input[type="number"] {
+    width: 62px;
+    padding: 4px 6px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    font: inherit;
+    font-size: 13px;
+    color: #1f2937;
+    text-align: right;
+  }
+  .line input[type="number"]:focus { outline: none; border-color: #93c5fd; }
+
+  .check {
+    justify-content: flex-start;
+    gap: 7px;
+    cursor: pointer;
+  }
+  .check input { margin: 0; accent-color: #2563eb; }
+
+  .saved {
+    height: 15px;
+    margin-top: 6px;
+    font-size: 11.5px;
+    color: #16a34a;
+    opacity: 0;
+    transition: opacity .2s ease;
+  }
+  .saved.show { opacity: 1; }
+
+  /* ---------- 视频下载设置入口 ---------- */
+  .ghost {
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 13px;
+    padding: 9px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #fff;
+    color: #4b5563;
+    font: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    transition: border-color .12s ease, background .12s ease, color .12s ease;
+  }
+  .ghost:hover { border-color: #bfdbfe; background: #f8fbff; color: #1d4ed8; }
+  .ghost svg { flex: none; }
+
+  /* ---------- 说明 ---------- */
+  .hint {
+    margin-top: 12px;
+    padding-top: 11px;
+    border-top: 1px solid #f0f1f3;
+    color: #9ca3af;
+    font-size: 12px;
+    line-height: 1.6;
+  }
+  .hint + .hint { margin-top: 5px; padding-top: 0; border-top: none; }
+  .hint b { color: #6b7280; font-weight: 500; }
+</style>
+</head>
+<body>
+  <h1>
+    <svg class="logo" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 3v12"/><path d="M7 11l5 5 5-5"/><path d="M4 20h16"/>
+    </svg>
+    视频图片下载器
+    <span class="spacer"></span>
+    <button class="gear" id="gear" type="button" title="设置" aria-label="设置" aria-expanded="false">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>
+    </button>
+  </h1>
+
+  <div class="status" id="status">正在扫描本页图片…</div>
+  <button class="primary" id="downloadAll" disabled>下载本页全部图片</button>
+
+  <div class="panel" id="panel">
+    <h2>下载按钮位置</h2>
+    <div class="grid" id="grid"></div>
+
+    <div class="line">
+      <span>距屏幕边缘</span>
+      <span><input type="number" id="gap" min="0" max="400" step="2"> px</span>
+    </div>
+
+    <label class="line check">
+      <input type="checkbox" id="showRing">
+      <span>在页面上显示选区虚线框</span>
+    </label>
+
+    <div class="saved" id="saved">已保存，页面立即生效</div>
+  </div>
+
+  <button class="ghost" id="vidOptions" type="button" title="打开视频下载的设置页">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="2" y="4" width="20" height="16" rx="3"/><path d="M10 9l5 3-5 3z"/>
+    </svg>
+    视频下载设置
+  </button>
+
+  <div class="hint" id="hint"></div>
+  <div class="hint"><b>下载视频：</b>在抖音视频页把鼠标移到视频上，右上角就会浮出下载按钮。</div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

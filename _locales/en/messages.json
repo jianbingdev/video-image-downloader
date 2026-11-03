@@ -1,0 +1,149 @@
+{
+   "manifest_description": {
+      "message": "Download Douyin videos without watermarks."
+   },
+   "manifest_name": {
+      "message": "万能视频下载器"
+   },
+   "options_completeDownload": {
+      "message": "Download Complete"
+   },
+   "options_completeDownloadTip": {
+      "message": "In the download completion stage, the file has been downloaded and you can view the downloaded file in the resource manager."
+   },
+   "options_downloadSetting": {
+      "message": "Download Settings"
+   },
+   "options_downloadSubdirectory": {
+      "message": "Download Subdirectory"
+   },
+   "options_downloadSubdirectoryTip": {
+      "message": "Subdirectory for file downloads"
+   },
+   "options_downloadTipSetting": {
+      "message": "Download Reminder"
+   },
+   "options_downloadTipSettingTip": {
+      "message": "When you click the download button, a download prompt will appear in the upper right corner of the window."
+   },
+   "options_enableSubdirectory": {
+      "message": "Subdirectory"
+   },
+   "options_enableSubdirectoryTip": {
+      "message": "Whether to download files to a subdirectory."
+   },
+   "options_pageTitle": {
+      "message": "Douyin Video Downloader"
+   },
+   "options_parseInformation": {
+      "message": "Parsing information"
+   },
+   "options_parseInformationTip": {
+      "message": "In parsing information stage extension will parse all the information needed for downloading."
+   },
+   "options_saveSetting": {
+      "message": "Save Settings"
+   },
+   "options_saveSuccess": {
+      "message": "Saved successfully"
+   },
+   "options_startDownload": {
+      "message": "Start download"
+   },
+   "options_startDownloadTip": {
+      "message": "In start download stage you can see the browser start downloading a file and you can check the download progress on the browser's download page."
+   },
+   "options_subdirectoryEmpty": {
+      "message": "Subdirectory cannot be empty"
+   },
+   "options_subdirectoryIllegal": {
+      "message": "Subdirectory contains illegal characters"
+   },
+   "options_subdirectoryName": {
+      "message": "Subdirectory Name"
+   },
+   "options_subdirectoryNameTip": {
+      "message": "Specify a subdirectory name"
+   },
+   "options_videoCreator": {
+      "message": "Creator"
+   },
+   "options_videoCreatorWithAt": {
+      "message": "Add an @ symbol before the video creator's name"
+   },
+   "options_videoCreatorWithAtTooltip": {
+      "message": "In the downloaded video file name, whether to add the @ symbol before the creator's name."
+   },
+   "options_videoDescription": {
+      "message": "Description"
+   },
+   "options_videoDescriptionWithHashtag": {
+      "message": "Video description retains hashtags"
+   },
+   "options_videoDescriptionWithHashtagTip": {
+      "message": "In the downloaded video file names, whether to keep the hashtags starting with # in the video description."
+   },
+   "options_videoFileName": {
+      "message": "Video File Name"
+   },
+   "options_videoFileNameEmpty": {
+      "message": "Video file name cannot be empty, please select at least one"
+   },
+   "options_videoFileNameTooltip": {
+      "message": "The name of the downloaded video file will be generated according to the attributes and order in the input box below, separated by spaces."
+   },
+   "options_videoHighestBitrate": {
+      "message": "Highest Bitrate"
+   },
+   "options_videoHighestResolution": {
+      "message": "Highest Resolution"
+   },
+   "options_videoLargestFileSize": {
+      "message": "Largest File Size"
+   },
+   "options_videoQuality": {
+      "message": "Video Quality"
+   },
+   "options_videoQualityTip": {
+      "message": "In what quality to download videos"
+   },
+   "options_videoResolution": {
+      "message": "Video Resolution"
+   },
+   "options_videoVid": {
+      "message": "Video ID"
+   },
+   "popup_feedback": {
+      "message": "Feedback"
+   },
+   "popup_feedbackEmailSubject": {
+      "message": "Feedback on Douyin Video Downloader"
+   },
+   "popup_review": {
+      "message": "Reviews"
+   },
+   "popup_setting": {
+      "message": "Settings"
+   },
+   "popup_telegram": {
+      "message": "Telegram"
+   },
+   "snackbar_completeDownload": {
+      "message": "Download Complete"
+   },
+   "snackbar_downloadFailed": {
+      "message": "Download failed, please refresh the page and try again"
+   },
+   "snackbar_findVidError": {
+      "message": "Failed to parse video information, please send an email to feedback the issue"
+   },
+   "snackbar_parseInformation": {
+      "message": "Parsing information"
+   },
+   "snackbar_parseInformationFail": {
+      "message": "Failed to parse the video information, please refresh the page and try again"
+   },
+   "snackbar_startDownload": {
+      "message": "Start download"
+   }
+}

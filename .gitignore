@@ -1,0 +1,23 @@
+# 补丁前的手工快照（v6 之前的 background/content/manifest 备份）
+# 留在磁盘上备查，不进版本库——它和当前代码是重复的两份，进库只会让人分不清哪份在跑。
+backup/
+
+# 系统与编辑器产生的杂物
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# 打包产物：Release 时生成，不入库
+*.zip
+*.crx
+*.pem
+
+# 将来若重建 WXT 工程，这些不该进库
+node_modules/
+.wxt/
+.output/
+.wrangler/
+
+# 临时文件
+*.tmp
+*.log

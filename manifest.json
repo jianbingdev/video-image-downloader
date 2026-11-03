@@ -1,0 +1,69 @@
+{
+  "manifest_version": 3,
+  "name": "视频图片下载器",
+  "version": "1.0.9",
+  "description": "抖音视频一键下载 + 全网页图片一键下载，两个功能合成一个插件。",
+  "default_locale": "zh_CN",
+
+  "permissions": ["downloads", "webRequest", "storage", "cookies", "declarativeNetRequest", "declarativeNetRequestWithHostAccess", "offscreen"],
+
+  "host_permissions": [
+    "https://*.douyin.com/*",
+    "https://*.jinritemai.com/*",
+    "https://*.douyinvod.com/*",
+    "https://*.douyincdn.com/*",
+    "https://*.bytecdnapi.com/*",
+    "https://*/*"
+  ],
+
+  "background": {
+    "service_worker": "service-worker.js"
+  },
+
+  "content_scripts": [
+    {
+      "css": ["content-scripts/content.css"],
+      "js": ["content-scripts/content.js"],
+      "matches": ["https://*.douyin.com/*", "https://*.jinritemai.com/*"],
+      "all_frames": true,
+      "match_about_blank": true
+    },
+    {
+      "js": ["imgdl/content.js"],
+      "matches": ["<all_urls>"],
+      "run_at": "document_idle",
+      "all_frames": true,
+      "match_about_blank": true
+    }
+  ],
+
+  "action": {
+    "default_title": "视频图片下载器",
+    "default_popup": "imgdl/popup.html",
+    "default_icon": {
+      "16": "icon/16.png",
+      "32": "icon/32.png",
+      "48": "icon/48.png",
+      "128": "icon/128.png"
+    }
+  },
+
+  "icons": {
+    "16": "icon/16.png",
+    "32": "icon/32.png",
+    "48": "icon/48.png",
+    "128": "icon/128.png"
+  },
+
+  "options_ui": {
+    "open_in_tab": true,
+    "page": "options.html"
+  },
+
+  "web_accessible_resources": [
+    {
+      "matches": ["https://*.douyin.com/*", "https://*.jinritemai.com/*"],
+      "resources": ["*.svg", "fetcher.js", "*.js.map"]
+    }
+  ]
+}
