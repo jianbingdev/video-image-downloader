@@ -250,10 +250,27 @@ async function collectStale(dir, keepSet) {
 
 /* ==================== 主流程 ==================== */
 
+/** 防呆：确认这个文件夹真的是扩展目录，避免往无关文件夹里写 47 个文件 */
+async function looksLikeExtensionDir(dir) {
+  try {
+    const fh = await dir.getFileHandle('manifest.json');
+    const json = JSON.parse(await (await fh.getFile()).text());
+    return json && json.manifest_version === 3;
+  } catch (_) {
+    return false;
+  }
+}
+
 async function runUpdate(dir, meta) {
   if (state.running) return;
   state.running = true;
   hideError();
+
+  if (!(await looksLikeExtensionDir(dir))) {
+    state.running = false;
+    showError('这个文件夹里没有有效的 manifest.json，看起来不是扩展目录。请选择你加载扩展时用的那个文件夹（里面有 manifest.json 的那一层）。');
+    return;
+  }
 
   try {
     // --- 下载 ---
