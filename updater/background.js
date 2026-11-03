@@ -205,7 +205,15 @@
     }
 
     if (msg.type === 'updater:openPage') {
-      chrome.tabs.create({ url: chrome.runtime.getURL('updater/updater.html') });
+      // 用独立小窗口而不是标签页：无地址栏，看起来像安装向导，
+      // 也避免在用户的标签栏里堆一个页面。窗口尺寸按 updater.html 的卡片调过。
+      chrome.windows.create({
+        url: chrome.runtime.getURL('updater/updater.html'),
+        type: 'popup',
+        width: 500,
+        height: 640,
+        focused: true
+      });
       sendResponse({ ok: true });
       return false;
     }
