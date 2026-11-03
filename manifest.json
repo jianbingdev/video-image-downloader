@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "视频图片下载器",
-  "version": "1.10",
+  "version": "1.2",
   "description": "抖音视频一键下载 + 全网页图片一键下载，两个功能合成一个插件。",
   "default_locale": "zh_CN",
   "permissions": [
