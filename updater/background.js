@@ -125,6 +125,22 @@
   }
 
   /**
+   * 工具栏图标角标。不打开弹窗也能看到有没有更新。
+   * 用箭头而不是数字：数字容易被当成"未读消息数"。
+   * 注意：这个函数必须定义在 check() 之外、同一作用域内，否则 check 里调用会 undefined。
+   */
+  async function syncBadge(state) {
+    try {
+      if (state && state.hasUpdate) {
+        await chrome.action.setBadgeBackgroundColor({ color: '#2563eb' });
+        await chrome.action.setBadgeText({ text: '↑' });
+      } else {
+        await chrome.action.setBadgeText({ text: '' });
+      }
+    } catch (_) { /* 角标失败不影响任何功能 */ }
+  }
+
+  /**
    * @param {boolean} force 忽略 24 小时节流
    */
   async function check(force) {
