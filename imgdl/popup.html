@@ -174,22 +174,24 @@
     color: #9ca3af;
   }
 
-  .range-wrap {
+  .xy {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
+    font-size: 12px;
+    color: #6b7280;
   }
-  .range-wrap input[type="range"] {
-    width: 96px;
-    accent-color: #2563eb;
-  }
-  .range-wrap b {
-    min-width: 26px;
-    font-weight: 500;
+  .xy input {
+    width: 48px;
+    padding: 3px 5px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font: inherit;
     font-size: 12.5px;
-    color: #4b5563;
-    text-align: right;
+    color: #1f2937;
+    text-align: center;
   }
+  .xy input:focus { outline: none; border-color: #93c5fd; }
 
   .check {
     justify-content: flex-start;
@@ -340,10 +342,12 @@
     <div class="grid" id="grid"></div>
 
     <div class="line">
-      <span>距屏幕边缘</span>
-      <span class="range-wrap">
-        <input type="range" id="gap" min="0" max="200" step="2">
-        <b id="gapVal">16</b>
+      <span>距边缘</span>
+      <span class="xy">
+        <label for="gapX">X</label>
+        <input type="number" id="gapX" min="0" max="400" step="1">
+        <label for="gapY">Y</label>
+        <input type="number" id="gapY" min="0" max="400" step="1">
       </span>
     </div>
 

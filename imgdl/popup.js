@@ -6,7 +6,7 @@
  *      设置写在 chrome.storage 里，内容脚本通过 chrome.storage.onChanged 立刻生效。
  */
 
-const DEFAULTS = { anchor: 'tl', gap: 16, showRing: false };
+const DEFAULTS = { anchor: 'tl', gapX: 16, gapY: 16, showRing: false };
 const ANCHORS = ['tl', 'tc', 'tr', 'ml', 'mc', 'mr', 'bl', 'bc', 'br'];
 const POS_LABEL = {
   tl: '左上角', tc: '顶部中间', tr: '右上角',
@@ -19,8 +19,8 @@ const btnAll = document.getElementById('downloadAll');
 const gearBtn = document.getElementById('gear');
 const panel = document.getElementById('panel');
 const gridEl = document.getElementById('grid');
-const gapEl = document.getElementById('gap');
-const gapValEl = document.getElementById('gapVal');
+const gapXEl = document.getElementById('gapX');
+const gapYEl = document.getElementById('gapY');
 const previewEl = document.getElementById('preview');
 const dotEl = document.getElementById('dot');
 const ringEl = document.getElementById('showRing');
@@ -43,14 +43,21 @@ function store() {
 
 function clampGap(v) {
   const n = Number(v);
-  if (!isFinite(n)) return DEFAULTS.gap;
+  if (!isFinite(n)) return DEFAULTS.gapX;
   return Math.max(0, Math.min(400, Math.round(n)));
 }
 
 function normalize(s) {
   const out = Object.assign({}, DEFAULTS, s || {});
   if (ANCHORS.indexOf(out.anchor) < 0) out.anchor = DEFAULTS.anchor;
-  out.gap = clampGap(out.gap);
+  // 兼容旧版：以前只有一个 gap，读到就同时当作水平和垂直
+  if (out.gap != null) {
+    if (out.gapX == null) out.gapX = out.gap;
+    if (out.gapY == null) out.gapY = out.gap;
+  }
+  out.gapX = clampGap(out.gapX);
+  out.gapY = clampGap(out.gapY);
+  delete out.gap;
   out.showRing = !!out.showRing;
   return out;
 }
@@ -100,8 +107,8 @@ function renderPreview() {
   const DH = 16;
   // 按比例映射，而不是把 gap 直接当像素用：预览区只有 90px 高，
   // 直接映射的话 gap 超过 37 就顶死不动了，滑块会显得没反应。
-  const gx = Math.min((settings.gap / 400) * w, w - DW);
-  const gy = Math.min((settings.gap / 400) * h, h - DH);
+  const gx = Math.min((settings.gapX / 400) * w, w - DW);
+  const gy = Math.min((settings.gapY / 400) * h, h - DH);
   const a = settings.anchor || 'tl';
 
   let left;
@@ -128,7 +135,7 @@ function buildGrid() {
     b.setAttribute('aria-label', POS_LABEL[a]);
     b.setAttribute('aria-pressed', 'false');
     b.appendChild(document.createElement('i'));
-    b.addEventListener('click', () => save({ anchor: a }));
+    b.addEventListener('click', () => save({ anchor: a, gapX: 16, gapY: 16 }));
     gridEl.appendChild(b);
   });
 }
@@ -138,8 +145,8 @@ function renderSettings() {
   for (let i = 0; i < tiles.length; i++) {
     tiles[i].setAttribute('aria-pressed', String(tiles[i].dataset.a === settings.anchor));
   }
-  if (document.activeElement !== gapEl) gapEl.value = String(settings.gap);
-  if (gapValEl) gapValEl.textContent = String(settings.gap);
+  if (document.activeElement !== gapXEl) gapXEl.value = String(settings.gapX);
+  if (document.activeElement !== gapYEl) gapYEl.value = String(settings.gapY);
   ringEl.checked = settings.showRing;
   renderPreview();
 
@@ -162,20 +169,28 @@ if (previewEl) {
     const y = e.clientY - r.top;
     const col = x < r.width / 3 ? 'l' : x > (r.width * 2) / 3 ? 'r' : 'c';
     const row = y < r.height / 3 ? 't' : y > (r.height * 2) / 3 ? 'b' : 'm';
-    save({ anchor: row + col });
+    save({ anchor: row + col, gapX: 16, gapY: 16 });
   });
 }
 
-gapEl.addEventListener('input', () => {
-  gapValEl.textContent = gapEl.value;
-  settings.gap = clampGap(gapEl.value);
+gapXEl.addEventListener('input', () => {
+  settings.gapX = clampGap(gapXEl.value);
+  renderPreview();
+});
+gapYEl.addEventListener('input', () => {
+  settings.gapY = clampGap(gapYEl.value);
   renderPreview();
 });
 
-gapEl.addEventListener('change', () => {
-  const v = clampGap(gapEl.value);
-  gapEl.value = String(v);
-  save({ gap: v });
+gapXEl.addEventListener('change', () => {
+  const v = clampGap(gapXEl.value);
+  gapXEl.value = String(v);
+  save({ gapX: v });
+});
+gapYEl.addEventListener('change', () => {
+  const v = clampGap(gapYEl.value);
+  gapYEl.value = String(v);
+  save({ gapY: v });
 });
 
 ringEl.addEventListener('change', () => save({ showRing: ringEl.checked }));

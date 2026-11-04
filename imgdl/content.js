@@ -32,7 +32,8 @@
 
   const DEFAULTS = {
     anchor: 'tl',                 // 按钮锚点：t/m/b + l/c/r
-    gap: 16,                      // 距屏幕边缘的距离(px)
+    gapX: 16,                     // 水平方向距边缘(px)：左侧锚点=距左，右侧=距右
+    gapY: 16,                     // 垂直方向距边缘(px)：上方锚点=距上，下方=距下
     showRing: false               // 是否显示选区虚线框
   };
   const ANCHORS = ['tl', 'tc', 'tr', 'ml', 'mc', 'mr', 'bl', 'bc', 'br'];
@@ -136,14 +137,19 @@
 
   function clampGap(v) {
     const n = Number(v);
-    if (!isFinite(n)) return DEFAULTS.gap;
+    if (!isFinite(n)) return DEFAULTS.gapX;
     return Math.max(0, Math.min(400, Math.round(n)));
   }
 
   function normalizeSettings(s) {
     const out = Object.assign({}, DEFAULTS, s || {});
     if (ANCHORS.indexOf(out.anchor) < 0) out.anchor = DEFAULTS.anchor;
-    out.gap = clampGap(out.gap);
+    // 兼容旧版：以前只有一个 gap，读到就同时当作水平和垂直
+    if (out.gap != null && out.gapX == null) out.gapX = out.gap;
+    if (out.gap != null && out.gapY == null) out.gapY = out.gap;
+    out.gapX = clampGap(out.gapX);
+    out.gapY = clampGap(out.gapY);
+    delete out.gap;
     out.showRing = !!out.showRing;
     return out;
   }
@@ -198,17 +204,18 @@
     const a = ANCHORS.indexOf(settings.anchor) >= 0 ? settings.anchor : DEFAULTS.anchor;
     const row = a.charAt(0);          // t / m / b
     const col = a.charAt(1);          // l / c / r
-    const g = clampGap(settings.gap);
+    const gx = clampGap(settings.gapX);
+    const gy = clampGap(settings.gapY);
     const s = btn.style;
 
     s.left = ''; s.right = ''; s.top = ''; s.bottom = ''; s.transform = '';
 
-    if (col === 'l') s.left = g + 'px';
-    else if (col === 'r') s.right = g + 'px';
+    if (col === 'l') s.left = gx + 'px';
+    else if (col === 'r') s.right = gx + 'px';
     else s.left = '50%';
 
-    if (row === 't') s.top = g + 'px';
-    else if (row === 'b') s.bottom = g + 'px';
+    if (row === 't') s.top = gy + 'px';
+    else if (row === 'b') s.bottom = gy + 'px';
     else s.top = '50%';
 
     // 居中方向用 transform 补齐（用 %/transform 就不必关心按钮自身尺寸）
