@@ -20,6 +20,9 @@ const gearBtn = document.getElementById('gear');
 const panel = document.getElementById('panel');
 const gridEl = document.getElementById('grid');
 const gapEl = document.getElementById('gap');
+const gapValEl = document.getElementById('gapVal');
+const previewEl = document.getElementById('preview');
+const dotEl = document.getElementById('dot');
 const ringEl = document.getElementById('showRing');
 const hintEl = document.getElementById('hint');
 const savedEl = document.getElementById('saved');
@@ -86,6 +89,35 @@ function showSaved() {
 
 /* ==================== 设置界面 ==================== */
 
+/** 把 anchor + gap 画成预览里那个小方块的位置 */
+function renderPreview() {
+  if (!previewEl || !dotEl) return;
+  const w = previewEl.clientWidth;
+  const h = previewEl.clientHeight;
+  if (!w || !h) return;            // panel 还没展开，宽高为 0，先跳过
+
+  const DW = 26;
+  const DH = 16;
+  // 按比例映射，而不是把 gap 直接当像素用：预览区只有 90px 高，
+  // 直接映射的话 gap 超过 37 就顶死不动了，滑块会显得没反应。
+  const gx = Math.min((settings.gap / 400) * w, w - DW);
+  const gy = Math.min((settings.gap / 400) * h, h - DH);
+  const a = settings.anchor || 'tl';
+
+  let left;
+  if (a.charAt(1) === 'l') left = gx;
+  else if (a.charAt(1) === 'r') left = w - DW - gx;
+  else left = (w - DW) / 2;
+
+  let top;
+  if (a.charAt(0) === 't') top = gy;
+  else if (a.charAt(0) === 'b') top = h - DH - gy;
+  else top = (h - DH) / 2;
+
+  dotEl.style.left = Math.round(left) + 'px';
+  dotEl.style.top = Math.round(top) + 'px';
+}
+
 function buildGrid() {
   ANCHORS.forEach((a) => {
     const b = document.createElement('button');
@@ -107,7 +139,9 @@ function renderSettings() {
     tiles[i].setAttribute('aria-pressed', String(tiles[i].dataset.a === settings.anchor));
   }
   if (document.activeElement !== gapEl) gapEl.value = String(settings.gap);
+  if (gapValEl) gapValEl.textContent = String(settings.gap);
   ringEl.checked = settings.showRing;
+  renderPreview();
 
   const label = POS_LABEL[settings.anchor] || POS_LABEL.tl;
   hintEl.innerHTML = '<b>下载单张：</b>把鼠标移到任意图片上，再点' + label + '的「下载图片」按钮。';
@@ -116,6 +150,26 @@ function renderSettings() {
 gearBtn.addEventListener('click', () => {
   const open = panel.classList.toggle('open');
   gearBtn.setAttribute('aria-expanded', String(open));
+  // panel 展开前宽高是 0，渲染不出位置，展开后补一次
+  if (open) requestAnimationFrame(renderPreview);
+});
+
+/** 点预览区任意位置：按三等分判断落在哪一格 */
+if (previewEl) {
+  previewEl.addEventListener('click', (e) => {
+    const r = previewEl.getBoundingClientRect();
+    const x = e.clientX - r.left;
+    const y = e.clientY - r.top;
+    const col = x < r.width / 3 ? 'l' : x > (r.width * 2) / 3 ? 'r' : 'c';
+    const row = y < r.height / 3 ? 't' : y > (r.height * 2) / 3 ? 'b' : 'm';
+    save({ anchor: row + col });
+  });
+}
+
+gapEl.addEventListener('input', () => {
+  gapValEl.textContent = gapEl.value;
+  settings.gap = clampGap(gapEl.value);
+  renderPreview();
 });
 
 gapEl.addEventListener('change', () => {

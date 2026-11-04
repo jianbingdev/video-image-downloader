@@ -141,6 +141,56 @@
   }
   .line input[type="number"]:focus { outline: none; border-color: #93c5fd; }
 
+  /* ---------- 位置预览 ---------- */
+  .preview {
+    position: relative;
+    width: 100%;
+    height: 92px;
+    margin-bottom: 5px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #f7f8fa;
+    cursor: crosshair;
+    overflow: hidden;
+  }
+  .preview .dot {
+    position: absolute;
+    width: 26px;
+    height: 16px;
+    border-radius: 4px;
+    background: #2563eb;
+    transition: left .12s ease, top .12s ease;
+  }
+  .preview .dot::after {
+    content: "";
+    position: absolute;
+    left: 7px; top: 5px; width: 12px; height: 6px;
+    border-radius: 2px;
+    background: rgba(255,255,255,.85);
+  }
+  .preview-hint {
+    margin: 0 0 10px;
+    font-size: 11.5px;
+    color: #9ca3af;
+  }
+
+  .range-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .range-wrap input[type="range"] {
+    width: 96px;
+    accent-color: #2563eb;
+  }
+  .range-wrap b {
+    min-width: 26px;
+    font-weight: 500;
+    font-size: 12.5px;
+    color: #4b5563;
+    text-align: right;
+  }
+
   .check {
     justify-content: flex-start;
     gap: 7px;
@@ -281,11 +331,20 @@
 
   <div class="panel" id="panel">
     <h2>下载按钮位置</h2>
+
+    <div class="preview" id="preview" title="点一下，把按钮放到这个位置">
+      <i class="dot" id="dot"></i>
+    </div>
+    <p class="preview-hint">点预览里的任意位置，按钮就放那里</p>
+
     <div class="grid" id="grid"></div>
 
     <div class="line">
       <span>距屏幕边缘</span>
-      <span><input type="number" id="gap" min="0" max="400" step="2"> px</span>
+      <span class="range-wrap">
+        <input type="range" id="gap" min="0" max="200" step="2">
+        <b id="gapVal">16</b>
+      </span>
     </div>
 
     <label class="line check">
