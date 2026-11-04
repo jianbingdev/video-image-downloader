@@ -14,7 +14,7 @@
 
   const REPO = 'jianbingdev/video-image-downloader';
   // dev 分支读 dev；合并回 main 正式发版时改成 'main'
-  const REF = 'dev';
+  const REF = 'main';
   const STATE_KEY = 'updater';
   const CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000;
   const FETCH_TIMEOUT_MS = 8000;
