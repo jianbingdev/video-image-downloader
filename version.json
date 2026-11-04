@@ -1,6 +1,6 @@
 {
-  "version": "1.2",
-  "notes": "主页卡片级下载按钮；修复小卡片下载串视频",
+  "version": "1.2.1",
+  "notes": "按钮位置改为拖动调节，页面实时跟随；主页每张卡片独立下载按钮",
   "zipball": "https://codeload.github.com/jianbingdev/video-image-downloader/zip/refs/heads/dev",
   "page": "https://github.com/jianbingdev/video-image-downloader/compare/v1.0.9...dev"
 }
