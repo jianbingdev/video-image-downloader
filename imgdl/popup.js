@@ -39,8 +39,18 @@ let savedTimer = 0;
 function store() {
   try {
     if (!chrome.storage) return null;
-    return chrome.storage.sync || chrome.storage.local || null;
+    // 用 local：拖动滑块时每一帧都要写，sync 有「每分钟 120 次」的限流，
+    // 拖一次就可能打满配额，反而写不进去。local 没有这个限制。
+    return chrome.storage.local || chrome.storage.sync || null;
   } catch (_) { return null; }
+}
+
+/** 拖动过程中直接推给内容脚本，不做节流（local 写入很快，不会卡） */
+function pushFast(patch) {
+  const area = store();
+  if (area && typeof area.set === 'function') {
+    try { area.set(patch); } catch (_) {}
+  }
 }
 
 /** 坐标夹在合法范围内 */
@@ -92,9 +102,13 @@ function loadSettings() {
     let done = false;
     const finish = (v) => { if (!done) { done = true; resolve(normalize(v)); } };
     try {
-      area.get(DEFAULTS, (v) => {
+      area.get(null, (v) => {
         try { if (chrome.runtime.lastError) { finish(null); return; } } catch (_) {}
-        finish(v);
+        // local 有数据就用；空的话回退读 sync（旧版本存在那里）
+        if (v && (v.x != null || v.anchor != null)) { finish(v); return; }
+        try {
+          chrome.storage.sync.get(null, (sv) => finish(sv));
+        } catch (_) { finish(v); }
       });
     } catch (_) { finish(null); }
     setTimeout(() => finish(null), 500);
@@ -222,11 +236,13 @@ posXEl.addEventListener('input', () => {
   settings.x = clampPos(posXEl.value, maxX());
   posXValEl.textContent = String(settings.x);
   renderPreview();
+  pushFast({ x: settings.x });
 });
 posYEl.addEventListener('input', () => {
   settings.y = clampPos(posYEl.value, maxY());
   posYValEl.textContent = String(settings.y);
   renderPreview();
+  pushFast({ y: settings.y });
 });
 
 posXEl.addEventListener('change', () => save({ x: clampPos(posXEl.value, maxX()) }));

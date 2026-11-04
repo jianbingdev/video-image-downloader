@@ -179,7 +179,8 @@
   function storageArea() {
     try {
       if (typeof chrome === 'undefined' || !chrome.storage) return null;
-      return chrome.storage.sync || chrome.storage.local || null;
+      // 和弹窗保持一致：用 local，拖动滑块时不受 sync 写入限流影响
+      return chrome.storage.local || chrome.storage.sync || null;
     } catch (_) { return null; }
   }
 
@@ -194,9 +195,13 @@
       done();
     };
     try {
-      area.get(DEFAULTS, (v) => {
+      area.get(null, (v) => {
         try { if (chrome.runtime.lastError) { finish(null); return; } } catch (_) {}
-        finish(v);
+        if (v && (v.x != null || v.anchor != null)) { finish(v); return; }
+        // local 还是空的，回退读 sync（旧版本的存放位置）
+        try {
+          chrome.storage.sync.get(null, (sv) => finish(sv));
+        } catch (_) { finish(v); }
       });
     } catch (_) { finish(null); }
   }
