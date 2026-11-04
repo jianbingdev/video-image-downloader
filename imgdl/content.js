@@ -31,9 +31,8 @@
   /* ---------- 设置（弹窗里改，存在 chrome.storage） ---------- */
 
   const DEFAULTS = {
-    anchor: 'tl',                 // 按钮锚点：t/m/b + l/c/r
-    gapX: 16,                     // 水平方向距边缘(px)：左侧锚点=距左，右侧=距右
-    gapY: 16,                     // 垂直方向距边缘(px)：上方锚点=距上，下方=距下
+    x: 16,                        // 按钮左边缘距视口左侧(px)
+    y: 16,                        // 按钮上边缘距视口顶部(px)
     showRing: false               // 是否显示选区虚线框
   };
   const ANCHORS = ['tl', 'tc', 'tr', 'ml', 'mc', 'mr', 'bl', 'bc', 'br'];
@@ -135,22 +134,45 @@
 
   /* ==================== 设置 ==================== */
 
-  function clampGap(v) {
+  /** 坐标夹在合法范围内 */
+  function clampPos(v, max) {
     const n = Number(v);
-    if (!isFinite(n)) return DEFAULTS.gapX;
-    return Math.max(0, Math.min(400, Math.round(n)));
+    if (!isFinite(n)) return 16;
+    return Math.max(0, Math.min(Math.max(0, max), Math.round(n)));
   }
 
+  /**
+   * 统一成绝对坐标 { x, y, showRing }。
+   * 旧版存的是 anchor + gap（距边缘），这里换算成坐标，老用户的位置不会丢。
+   */
   function normalizeSettings(s) {
-    const out = Object.assign({}, DEFAULTS, s || {});
-    if (ANCHORS.indexOf(out.anchor) < 0) out.anchor = DEFAULTS.anchor;
-    // 兼容旧版：以前只有一个 gap，读到就同时当作水平和垂直
-    if (out.gap != null && out.gapX == null) out.gapX = out.gap;
-    if (out.gap != null && out.gapY == null) out.gapY = out.gap;
-    out.gapX = clampGap(out.gapX);
-    out.gapY = clampGap(out.gapY);
-    delete out.gap;
-    out.showRing = !!out.showRing;
+    const raw = Object.assign({}, s || {});
+    const out = { showRing: !!raw.showRing };
+    const W = window.innerWidth || 1920;
+    const H = window.innerHeight || 1080;
+    const BW = 110;
+    const BH = 36;
+
+    if (raw.x != null && raw.y != null) {
+      out.x = clampPos(raw.x, W - BW);
+      out.y = clampPos(raw.y, H - BH);
+      return out;
+    }
+
+    const a = ANCHORS.indexOf(raw.anchor) >= 0 ? raw.anchor : 'tl';
+    const gxRaw = raw.gapX != null ? raw.gapX : raw.gap;
+    const gyRaw = raw.gapY != null ? raw.gapY : raw.gap;
+    const gx = clampPos(gxRaw, W);
+    const gy = clampPos(gyRaw, H);
+
+    if (a.charAt(1) === 'l') out.x = gx;
+    else if (a.charAt(1) === 'r') out.x = Math.max(0, W - BW - gx);
+    else out.x = Math.max(0, Math.round((W - BW) / 2));
+
+    if (a.charAt(0) === 't') out.y = gy;
+    else if (a.charAt(0) === 'b') out.y = Math.max(0, H - BH - gy);
+    else out.y = Math.max(0, Math.round((H - BH) / 2));
+
     return out;
   }
 
@@ -199,29 +221,21 @@
   }
 
   /** 把九宫格锚点 + 距边缘距离落到按钮的 left/right/top/bottom 上 */
+  /** 绝对坐标定位；窗口尺寸变了会被夹回可视区 */
   function applyPosition() {
     if (!btn) return;
-    const a = ANCHORS.indexOf(settings.anchor) >= 0 ? settings.anchor : DEFAULTS.anchor;
-    const row = a.charAt(0);          // t / m / b
-    const col = a.charAt(1);          // l / c / r
-    const gx = clampGap(settings.gapX);
-    const gy = clampGap(settings.gapY);
+    const W = window.innerWidth || 0;
+    const H = window.innerHeight || 0;
+    const BW = btn.offsetWidth || 110;
+    const BH = btn.offsetHeight || 36;
+    const x = clampPos(settings.x, Math.max(0, W - BW - 2));
+    const y = clampPos(settings.y, Math.max(0, H - BH - 2));
     const s = btn.style;
-
-    s.left = ''; s.right = ''; s.top = ''; s.bottom = ''; s.transform = '';
-
-    if (col === 'l') s.left = gx + 'px';
-    else if (col === 'r') s.right = gx + 'px';
-    else s.left = '50%';
-
-    if (row === 't') s.top = gy + 'px';
-    else if (row === 'b') s.bottom = gy + 'px';
-    else s.top = '50%';
-
-    // 居中方向用 transform 补齐（用 %/transform 就不必关心按钮自身尺寸）
-    if (col === 'c' && row === 'm') s.transform = 'translate(-50%,-50%)';
-    else if (col === 'c') s.transform = 'translateX(-50%)';
-    else if (row === 'm') s.transform = 'translateY(-50%)';
+    s.left = x + 'px';
+    s.top = y + 'px';
+    s.right = '';
+    s.bottom = '';
+    s.transform = '';
   }
 
   function toast(text, isError) {
@@ -944,7 +958,7 @@
     // 翻页 / 滚动之后新出现的图要立刻算进来。
     // 只调 schedule() 会一直沿用最多 800ms 的旧缓存，那期间新的一屏等于"不存在"。
     document.addEventListener('scroll', onScroll, { passive: true, capture: true });
-    window.addEventListener('resize', schedule, { passive: true });
+    window.addEventListener('resize', () => { applyPosition(); schedule(); }, { passive: true });
     // 轮播翻页 / 切 tab 这类操作只改 DOM、不发滚动事件，靠点击后补算一次兜住
     document.addEventListener('click', bump, { passive: true, capture: true });
     setInterval(() => { cacheAt = 0; schedule(); }, POLL_INTERVAL);

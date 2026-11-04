@@ -6,7 +6,7 @@
  *      设置写在 chrome.storage 里，内容脚本通过 chrome.storage.onChanged 立刻生效。
  */
 
-const DEFAULTS = { anchor: 'tl', gapX: 16, gapY: 16, showRing: false };
+const DEFAULTS = { x: 16, y: 16, showRing: false };
 const ANCHORS = ['tl', 'tc', 'tr', 'ml', 'mc', 'mr', 'bl', 'bc', 'br'];
 const POS_LABEL = {
   tl: '左上角', tc: '顶部中间', tr: '右上角',
@@ -19,8 +19,10 @@ const btnAll = document.getElementById('downloadAll');
 const gearBtn = document.getElementById('gear');
 const panel = document.getElementById('panel');
 const gridEl = document.getElementById('grid');
-const gapXEl = document.getElementById('gapX');
-const gapYEl = document.getElementById('gapY');
+const posXEl = document.getElementById('posX');
+const posYEl = document.getElementById('posY');
+const posXValEl = document.getElementById('posXVal');
+const posYValEl = document.getElementById('posYVal');
 const previewEl = document.getElementById('preview');
 const dotEl = document.getElementById('dot');
 const ringEl = document.getElementById('showRing');
@@ -41,24 +43,45 @@ function store() {
   } catch (_) { return null; }
 }
 
-function clampGap(v) {
+/** 坐标夹在合法范围内 */
+function clampPos(v, max) {
   const n = Number(v);
-  if (!isFinite(n)) return DEFAULTS.gapX;
-  return Math.max(0, Math.min(400, Math.round(n)));
+  if (!isFinite(n)) return 16;
+  return Math.max(0, Math.min(Math.max(0, max), Math.round(n)));
 }
 
+/**
+ * 统一成绝对坐标 { x, y, showRing }。
+ * 旧版存的是 anchor + gap（距边缘），这里换算成坐标，升级后位置不会丢。
+ */
 function normalize(s) {
-  const out = Object.assign({}, DEFAULTS, s || {});
-  if (ANCHORS.indexOf(out.anchor) < 0) out.anchor = DEFAULTS.anchor;
-  // 兼容旧版：以前只有一个 gap，读到就同时当作水平和垂直
-  if (out.gap != null) {
-    if (out.gapX == null) out.gapX = out.gap;
-    if (out.gapY == null) out.gapY = out.gap;
+  const raw = Object.assign({}, s || {});
+  const out = { showRing: !!raw.showRing };
+  const W = screen.availWidth || 1920;
+  const H = screen.availHeight || 1080;
+  const BW = 110;
+  const BH = 36;
+
+  if (raw.x != null && raw.y != null) {
+    out.x = clampPos(raw.x, W - BW);
+    out.y = clampPos(raw.y, H - BH);
+    return out;
   }
-  out.gapX = clampGap(out.gapX);
-  out.gapY = clampGap(out.gapY);
-  delete out.gap;
-  out.showRing = !!out.showRing;
+
+  const a = ANCHORS.indexOf(raw.anchor) >= 0 ? raw.anchor : 'tl';
+  const gxRaw = raw.gapX != null ? raw.gapX : raw.gap;
+  const gyRaw = raw.gapY != null ? raw.gapY : raw.gap;
+  const gx = clampPos(gxRaw, W);
+  const gy = clampPos(gyRaw, H);
+
+  if (a.charAt(1) === 'l') out.x = gx;
+  else if (a.charAt(1) === 'r') out.x = Math.max(0, W - BW - gx);
+  else out.x = Math.max(0, Math.round((W - BW) / 2));
+
+  if (a.charAt(0) === 't') out.y = gy;
+  else if (a.charAt(0) === 'b') out.y = Math.max(0, H - BH - gy);
+  else out.y = Math.max(0, Math.round((H - BH) / 2));
+
   return out;
 }
 
@@ -96,7 +119,7 @@ function showSaved() {
 
 /* ==================== 设置界面 ==================== */
 
-/** 把 anchor + gap 画成预览里那个小方块的位置 */
+/** 按 x/y 在屏幕上的相对位置画预览 */
 function renderPreview() {
   if (!previewEl || !dotEl) return;
   const w = previewEl.clientWidth;
@@ -105,24 +128,34 @@ function renderPreview() {
 
   const DW = 26;
   const DH = 16;
-  // 按比例映射，而不是把 gap 直接当像素用：预览区只有 90px 高，
-  // 直接映射的话 gap 超过 37 就顶死不动了，滑块会显得没反应。
-  const gx = Math.min((settings.gapX / 400) * w, w - DW);
-  const gy = Math.min((settings.gapY / 400) * h, h - DH);
-  const a = settings.anchor || 'tl';
+  const SW = screen.availWidth || 1920;
+  const SH = screen.availHeight || 1080;
+  const rx = Math.max(0, Math.min(1, settings.x / Math.max(1, SW - DW)));
+  const ry = Math.max(0, Math.min(1, settings.y / Math.max(1, SH - DH)));
 
-  let left;
-  if (a.charAt(1) === 'l') left = gx;
-  else if (a.charAt(1) === 'r') left = w - DW - gx;
-  else left = (w - DW) / 2;
+  dotEl.style.left = Math.round(rx * (w - DW)) + 'px';
+  dotEl.style.top = Math.round(ry * (h - DH)) + 'px';
+}
 
-  let top;
-  if (a.charAt(0) === 't') top = gy;
-  else if (a.charAt(0) === 'b') top = h - DH - gy;
-  else top = (h - DH) / 2;
+/** 九宫格锚点 → 屏幕坐标 */
+function anchorPos(a) {
+  const W = screen.availWidth || 1920;
+  const H = screen.availHeight || 1080;
+  const BW = 110;
+  const BH = 36;
+  const G = 16;
+  const x = a.charAt(1) === 'l' ? G : a.charAt(1) === 'r' ? W - BW - G : Math.round((W - BW) / 2);
+  const y = a.charAt(0) === 't' ? G : a.charAt(0) === 'b' ? H - BH - G : Math.round((H - BH) / 2);
+  return { x: Math.max(0, x), y: Math.max(0, y) };
+}
 
-  dotEl.style.left = Math.round(left) + 'px';
-  dotEl.style.top = Math.round(top) + 'px';
+/** 反过来：这组坐标最接近哪个锚点 */
+function nearestAnchor(x, y) {
+  const W = screen.availWidth || 1920;
+  const H = screen.availHeight || 1080;
+  const col = x < W / 3 ? 'l' : x > (W * 2) / 3 ? 'r' : 'c';
+  const row = y < H / 3 ? 't' : y > (H * 2) / 3 ? 'b' : 'm';
+  return row + col;
 }
 
 function buildGrid() {
@@ -135,23 +168,28 @@ function buildGrid() {
     b.setAttribute('aria-label', POS_LABEL[a]);
     b.setAttribute('aria-pressed', 'false');
     b.appendChild(document.createElement('i'));
-    b.addEventListener('click', () => save({ anchor: a, gapX: 16, gapY: 16 }));
+    b.addEventListener('click', () => {
+      const p = anchorPos(a);
+      save({ x: p.x, y: p.y });
+    });
     gridEl.appendChild(b);
   });
 }
 
 function renderSettings() {
+  const cur = nearestAnchor(settings.x, settings.y);
   const tiles = gridEl.querySelectorAll('.pos');
   for (let i = 0; i < tiles.length; i++) {
-    tiles[i].setAttribute('aria-pressed', String(tiles[i].dataset.a === settings.anchor));
+    tiles[i].setAttribute('aria-pressed', String(tiles[i].dataset.a === cur));
   }
-  if (document.activeElement !== gapXEl) gapXEl.value = String(settings.gapX);
-  if (document.activeElement !== gapYEl) gapYEl.value = String(settings.gapY);
+  if (document.activeElement !== posXEl) posXEl.value = String(settings.x);
+  if (document.activeElement !== posYEl) posYEl.value = String(settings.y);
+  posXValEl.textContent = String(settings.x);
+  posYValEl.textContent = String(settings.y);
   ringEl.checked = settings.showRing;
   renderPreview();
 
-  const label = POS_LABEL[settings.anchor] || POS_LABEL.tl;
-  hintEl.innerHTML = '<b>下载单张：</b>把鼠标移到任意图片上，再点' + label + '的「下载图片」按钮。';
+  hintEl.innerHTML = '<b>下载单张：</b>把鼠标移到任意图片上，再点按钮。';
 }
 
 gearBtn.addEventListener('click', () => {
@@ -169,29 +207,30 @@ if (previewEl) {
     const y = e.clientY - r.top;
     const col = x < r.width / 3 ? 'l' : x > (r.width * 2) / 3 ? 'r' : 'c';
     const row = y < r.height / 3 ? 't' : y > (r.height * 2) / 3 ? 'b' : 'm';
-    save({ anchor: row + col, gapX: 16, gapY: 16 });
+    const p = anchorPos(row + col);
+    save({ x: p.x, y: p.y });
   });
 }
 
-gapXEl.addEventListener('input', () => {
-  settings.gapX = clampGap(gapXEl.value);
+const maxX = () => Math.max(0, (screen.availWidth || 1920) - 110);
+const maxY = () => Math.max(0, (screen.availHeight || 1080) - 36);
+
+if (posXEl) posXEl.max = String(maxX());
+if (posYEl) posYEl.max = String(maxY());
+
+posXEl.addEventListener('input', () => {
+  settings.x = clampPos(posXEl.value, maxX());
+  posXValEl.textContent = String(settings.x);
   renderPreview();
 });
-gapYEl.addEventListener('input', () => {
-  settings.gapY = clampGap(gapYEl.value);
+posYEl.addEventListener('input', () => {
+  settings.y = clampPos(posYEl.value, maxY());
+  posYValEl.textContent = String(settings.y);
   renderPreview();
 });
 
-gapXEl.addEventListener('change', () => {
-  const v = clampGap(gapXEl.value);
-  gapXEl.value = String(v);
-  save({ gapX: v });
-});
-gapYEl.addEventListener('change', () => {
-  const v = clampGap(gapYEl.value);
-  gapYEl.value = String(v);
-  save({ gapY: v });
-});
+posXEl.addEventListener('change', () => save({ x: clampPos(posXEl.value, maxX()) }));
+posYEl.addEventListener('change', () => save({ y: clampPos(posYEl.value, maxY()) }));
 
 ringEl.addEventListener('change', () => save({ showRing: ringEl.checked }));
 

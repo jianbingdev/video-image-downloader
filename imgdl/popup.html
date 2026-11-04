@@ -174,24 +174,33 @@
     color: #9ca3af;
   }
 
-  .xy {
+  .slider-row {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
+    margin-top: 9px;
     font-size: 12px;
     color: #6b7280;
   }
-  .xy input {
-    width: 48px;
-    padding: 3px 5px;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    font: inherit;
-    font-size: 12.5px;
-    color: #1f2937;
-    text-align: center;
+  .slider-row label {
+    flex: none;
+    width: 10px;
+    font-weight: 500;
   }
-  .xy input:focus { outline: none; border-color: #93c5fd; }
+  .slider-row input[type="range"] {
+    flex: 1;
+    min-width: 0;
+    height: 3px;
+    accent-color: #2563eb;
+  }
+  .slider-row b {
+    flex: none;
+    width: 40px;
+    text-align: right;
+    font-weight: 500;
+    font-size: 12.5px;
+    color: #374151;
+  }
 
   .check {
     justify-content: flex-start;
@@ -341,14 +350,15 @@
 
     <div class="grid" id="grid"></div>
 
-    <div class="line">
-      <span>距边缘</span>
-      <span class="xy">
-        <label for="gapX">X</label>
-        <input type="number" id="gapX" min="0" max="400" step="1">
-        <label for="gapY">Y</label>
-        <input type="number" id="gapY" min="0" max="400" step="1">
-      </span>
+    <div class="slider-row">
+      <label for="posX">X</label>
+      <input type="range" id="posX" min="0" max="1920" step="1">
+      <b id="posXVal">16</b>
+    </div>
+    <div class="slider-row">
+      <label for="posY">Y</label>
+      <input type="range" id="posY" min="0" max="1080" step="1">
+      <b id="posYVal">16</b>
     </div>
 
     <label class="line check">
