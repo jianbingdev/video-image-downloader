@@ -951,7 +951,15 @@
     if (btn) btn.style.visibility = 'visible';
   }
 
+  const IS_TOP = (function () {
+    try { return window.top === window.self; } catch (_) { return false; }
+  })();
+
   function init() {
+    // 只有顶层页面才建按钮。manifest 是 all_frames: true，
+    // 每个 iframe 都会注入一份，不拦的话页面上有几个 iframe 就多几个按钮。
+    // 子 frame 不建 UI、不轮询；collectAll 仍然由消息按需调用，不影响「下载全部」。
+    if (!IS_TOP) return;
     mount();                       // 先建出来（隐藏态），等设置读回来再定位显示
     schedule();
     watchSettings();
