@@ -1,6 +1,6 @@
 {
   "version": "1.2.2",
   "notes": "修复页面上出现两个下载按钮；按钮图标与文字居中；新增「显示下载按钮」开关；千川下载带素材原始文件名",
-  "zipball": "https://codeload.github.com/jianbingdev/video-image-downloader/zip/refs/heads/dev",
-  "page": "https://github.com/jianbingdev/video-image-downloader/compare/v1.0.9...dev"
+  "zipball": "https://codeload.github.com/jianbingdev/video-image-downloader/zip/refs/tags/v1.2.2",
+  "page": "https://github.com/jianbingdev/video-image-downloader/releases/tag/v1.2.2"
 }
