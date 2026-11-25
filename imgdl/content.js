@@ -69,34 +69,43 @@
     btn = document.createElement('div');
     btn.setAttribute('data-imgdl-ui', 'btn');
     btn.setAttribute('title', '把鼠标移到要下载的图片上，再点这里');
+    // 关键属性一律 !important：页面自己的 CSS 会覆盖 div 的 display，
+    // 一旦变成 block，align-items:center 就失效，文字和图标会挤到上边。
     btn.style.cssText = [
-      'position:fixed',
+      'position:fixed !important',
       'visibility:hidden',        // 等设置读回来定位好再显示，避免位置跳一下
-      'z-index:2147483647',
-      'display:inline-flex',
-      'align-items:center',
-      'gap:6px',
-      'height:36px',
-      'padding:0 13px',
-      'box-sizing:border-box',
-      'border-radius:10px',
-      'cursor:pointer',
-      'background:rgba(37,99,235,.94)',
-      'color:#fff',
-      'font:13px/1 -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif',
-      'box-shadow:0 3px 14px rgba(0,0,0,.28)',
+      'z-index:2147483647 !important',
+      'display:inline-flex !important',
+      'align-items:center !important',
+      'justify-content:center !important',
+      'gap:6px !important',
+      'height:36px !important',
+      'min-height:36px !important',
+      'max-height:36px !important',
+      'padding:0 13px !important',
+      'margin:0 !important',
+      'border:0 !important',
+      'box-sizing:border-box !important',
+      'border-radius:10px !important',
+      'cursor:pointer !important',
+      'background:rgba(37,99,235,.94) !important',
+      'color:#fff !important',
+      'font:13px/1 -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif !important',
+      'line-height:1 !important',
+      'letter-spacing:normal !important',
+      'box-shadow:0 3px 14px rgba(0,0,0,.28) !important',
       'user-select:none',
       '-webkit-user-select:none',
       'transition:background .12s ease'
     ].join(';');
     btn.innerHTML =
       '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff"' +
-      ' stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" style="flex:none">' +
+      ' stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block">' +
       '<path d="M12 3v12"/><path d="M7 11l5 5 5-5"/><path d="M4 20h16"/></svg>' +
-      '<span>下载图片</span>';
+      '<span style="line-height:1 !important;display:block;font:inherit">下载图片</span>';
 
-    btn.addEventListener('mouseenter', () => { btn.style.background = 'rgba(29,78,216,.98)'; });
-    btn.addEventListener('mouseleave', () => { btn.style.background = 'rgba(37,99,235,.94)'; });
+    btn.addEventListener('mouseenter', () => { btn.style.setProperty('background', 'rgba(29,78,216,.98)', 'important'); });
+    btn.addEventListener('mouseleave', () => { btn.style.setProperty('background', 'rgba(37,99,235,.94)', 'important'); });
 
     // 拦住冒泡，别让页面自己的热区/导航栏把这次点击抢走
     const swallow = (e) => {
@@ -230,9 +239,12 @@
   /** 绝对坐标定位；窗口尺寸变了会被夹回可视区 */
   function applyPosition() {
     if (!btn) return;
-    // 开关关掉时直接不显示，省得还占着位置吃鼠标事件
-    if (!settings.showButton) { btn.style.display = 'none'; return; }
-    btn.style.display = '';
+    // 开关关掉时直接不显示，省得还占着位置吃鼠标事件。
+    // 必须用 setProperty + important：直接写 style.display 会连 cssText 里那条
+    // display:inline-flex !important 一起清掉，退回页面给的 block，
+    // align-items 随之失效，图标和文字就挤到上边去了。
+    if (!settings.showButton) { btn.style.setProperty('display', 'none', 'important'); return; }
+    btn.style.setProperty('display', 'inline-flex', 'important');
     const W = window.innerWidth || 0;
     const H = window.innerHeight || 0;
     const BW = btn.offsetWidth || 110;
