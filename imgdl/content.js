@@ -33,7 +33,8 @@
   const DEFAULTS = {
     x: 16,                        // 按钮左边缘距视口左侧(px)
     y: 16,                        // 按钮上边缘距视口顶部(px)
-    showRing: false               // 是否显示选区虚线框
+    showRing: false,              // 是否显示选区虚线框
+    showButton: true              // 是否在页面上显示下载按钮
   };
   const ANCHORS = ['tl', 'tc', 'tr', 'ml', 'mc', 'mr', 'bl', 'bc', 'br'];
   const POS_LABEL = {
@@ -147,7 +148,7 @@
    */
   function normalizeSettings(s) {
     const raw = Object.assign({}, s || {});
-    const out = { showRing: !!raw.showRing };
+    const out = { showRing: !!raw.showRing, showButton: raw.showButton !== false };
     const W = window.innerWidth || 1920;
     const H = window.innerHeight || 1080;
     const BW = 110;
@@ -229,6 +230,9 @@
   /** 绝对坐标定位；窗口尺寸变了会被夹回可视区 */
   function applyPosition() {
     if (!btn) return;
+    // 开关关掉时直接不显示，省得还占着位置吃鼠标事件
+    if (!settings.showButton) { btn.style.display = 'none'; return; }
+    btn.style.display = '';
     const W = window.innerWidth || 0;
     const H = window.innerHeight || 0;
     const BW = btn.offsetWidth || 110;

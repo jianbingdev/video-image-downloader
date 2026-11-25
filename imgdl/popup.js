@@ -6,7 +6,7 @@
  *      设置写在 chrome.storage 里，内容脚本通过 chrome.storage.onChanged 立刻生效。
  */
 
-const DEFAULTS = { x: 16, y: 16, showRing: false };
+const DEFAULTS = { x: 16, y: 16, showRing: false, showButton: true };
 const ANCHORS = ['tl', 'tc', 'tr', 'ml', 'mc', 'mr', 'bl', 'bc', 'br'];
 const POS_LABEL = {
   tl: '左上角', tc: '顶部中间', tr: '右上角',
@@ -26,6 +26,7 @@ const posYValEl = document.getElementById('posYVal');
 const previewEl = document.getElementById('preview');
 const dotEl = document.getElementById('dot');
 const ringEl = document.getElementById('showRing');
+const showButtonEl = document.getElementById('showButton');
 const hintEl = document.getElementById('hint');
 const savedEl = document.getElementById('saved');
 const vidOptionsEl = document.getElementById('vidOptions');
@@ -66,7 +67,7 @@ function clampPos(v, max) {
  */
 function normalize(s) {
   const raw = Object.assign({}, s || {});
-  const out = { showRing: !!raw.showRing };
+  const out = { showRing: !!raw.showRing, showButton: raw.showButton !== false };
   const W = screen.availWidth || 1920;
   const H = screen.availHeight || 1080;
   const BW = 110;
@@ -201,6 +202,7 @@ function renderSettings() {
   posXValEl.textContent = String(settings.x);
   posYValEl.textContent = String(settings.y);
   ringEl.checked = settings.showRing;
+  if (showButtonEl) showButtonEl.checked = settings.showButton;
   renderPreview();
 
   hintEl.innerHTML = '<b>下载单张：</b>把鼠标移到任意图片上，再点按钮。';
@@ -249,6 +251,7 @@ posXEl.addEventListener('change', () => save({ x: clampPos(posXEl.value, maxX())
 posYEl.addEventListener('change', () => save({ y: clampPos(posYEl.value, maxY()) }));
 
 ringEl.addEventListener('change', () => save({ showRing: ringEl.checked }));
+if (showButtonEl) showButtonEl.addEventListener('change', () => save({ showButton: showButtonEl.checked }));
 
 /* ==================== 本页图片 ==================== */
 
